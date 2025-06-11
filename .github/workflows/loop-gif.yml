@@ -1,0 +1,38 @@
+name: Convert GIFs to Looping
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '动态/**/*.gif'
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  convert-loop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+      - name: Create output directory
+        run: mkdir -p loop
+
+      - name: Convert GIFs to looping
+        run: |
+          for gif in 动态/*.gif; do
+            filename=$(basename "$gif")
+            convert "$gif" -loop 0 "loop/$filename"
+          done
+
+      - name: Commit and push looping GIFs
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add loop/
+          git commit -m "Auto: converted GIFs to looped versions" || echo "No changes"
+          git push
