@@ -5,8 +5,11 @@ on:
     branches:
       - main
     paths:
-      - '动态/**/*.gif'
-  workflow_dispatch:  # 手动触发
+      - "动态/**/*.gif"
+  workflow_dispatch:
+
+permissions:
+  contents: write # 关键：允许写入仓库
 
 jobs:
   convert-loop:
@@ -15,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # 默认自动注入，具有 push 权限
 
       - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
