@@ -1,0 +1,37 @@
+name: Rename GIFs with BLIP
+
+on:
+  workflow_dispatch:  # 可手动触发
+  push:
+    paths:
+      - 'loop/*.gif'  # 监听 GIF 添加/更改
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install transformers pillow opencv-python
+
+    - name: Rename GIFs using BLIP
+      run: |
+        python scripts/rename_blip.py
+
+    - name: Commit and push changes
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add loop/*.gif
+        git commit -m "Auto rename GIFs with BLIP" || echo "No changes to commit"
+        git push

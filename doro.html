@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GIF 图库</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f8f8f8;
+            padding: 20px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .item {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 4px;
+        }
+
+        .link {
+            word-break: break-all;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>GIF 图库</h1>
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        // 所有图片文件名（手动列出或通过构建脚本自动生成）
+        const gifs = [
+            "动画P展示-2025-0403-180743.gif",
+            "动画P展示-2025-0405-202825.gif",
+            "动画P展示-2025-0406-195206.gif",
+            "动画P展示-2025-0406-211503.gif",
+            "动画P展示-2025-0406-212920.gif",
+            "动画P展示-2025-0406-213728.gif"
+        ];
+
+        const base = "https://jsd.nmmsl.top/gh/1143520/doro@main/loop/";
+
+        const gallery = document.getElementById("gallery");
+
+        gifs.forEach(filename => {
+            const item = document.createElement("div");
+            item.className = "item";
+
+            const img = document.createElement("img");
+            img.src = base + encodeURIComponent(filename);
+            item.appendChild(img);
+
+            const link = document.createElement("div");
+            link.className = "link";
+            link.textContent = base + filename;
+            item.appendChild(link);
+
+            gallery.appendChild(item);
+        });
+    </script>
+</body>
+
+</html>
