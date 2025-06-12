@@ -27,11 +27,14 @@ jobs:
     - name: Rename GIFs using BLIP
       run: |
         python scripts/rename_blip.py
-
+        
     - name: Commit and push changes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
         git add loop/*.gif
         git commit -m "Auto rename GIFs with BLIP" || echo "No changes to commit"
-        git push
+        git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
+
