@@ -22,7 +22,7 @@ jobs:
           python-version: 3.11
 
       - name: Install dependencies
-        run: pip install transformers accelerate Pillow opencv-python
+        run: pip install torch transformers accelerate Pillow opencv-python
 
       - name: Rename GIFs using BLIP
         run: python scripts/rename_blip.py
