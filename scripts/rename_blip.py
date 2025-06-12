@@ -1,6 +1,7 @@
 import os
 import cv2
 from PIL import Image
+import torch
 from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
 
 # 模型加载
