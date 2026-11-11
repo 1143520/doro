@@ -1,0 +1,87 @@
+name: build-thumbs
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'loop/**'
+
+concurrency:
+  group: thumbs
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  thumbs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: ensure ffmpeg
+        run: |
+          command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+          ffmpeg -version | head -1
+
+      - name: generate thumbs + manifest
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, glob
+
+          SRC = "loop"
+          OUT = "thumbs"
+          os.makedirs(OUT, exist_ok=True)
+          items = []
+          files = sorted(glob.glob(os.path.join(SRC, "*.gif")))
+          print("gif total:", len(files))
+
+          made = 0
+          for f in files:
+              base = os.path.splitext(os.path.basename(f))[0]
+              thumb = os.path.join(OUT, base + ".jpg")
+              # 尺寸用 ffprobe 取
+              try:
+                  out = subprocess.run(
+                      ["ffprobe","-v","error","-select_streams","v:0",
+                       "-show_entries","stream=width,height","-of","csv=p=0:s=x", f],
+                      capture_output=True, text=True, timeout=30).stdout.strip()
+                  w, h = (out.split("x") + ["0","0"])[:2]
+              except Exception:
+                  w = h = "0"
+
+              if not os.path.exists(thumb):
+                  r = subprocess.run(
+                      ["ffmpeg","-v","error","-y","-i",f,"-frames:v","1",
+                       "-vf","scale=320:-1:flags=lanczos","-q:v","5", thumb],
+                      capture_output=True, text=True)
+                  if r.returncode == 0:
+                      made += 1
+                  else:
+                      print("FAIL", f, r.stderr[-200:])
+
+              if os.path.exists(thumb):
+                  items.append({
+                      "name": base,
+                      "gif": f,
+                      "thumb": thumb,
+                      "w": int(w) if str(w).isdigit() else 0,
+                      "h": int(h) if str(h).isdigit() else 0,
+                      "size": os.path.getsize(f),
+                  })
+
+          with open("manifest.json", "w", encoding="utf-8") as fp:
+              json.dump({"count": len(items), "items": items}, fp, ensure_ascii=False)
+          print("thumbs made this run:", made, "items:", len(items))
+          PY
+
+      - name: commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add thumbs manifest.json
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git commit -m "chore: 生成缩略图与 manifest"
+          git push
